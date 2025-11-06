@@ -1,4 +1,4 @@
-name: CI/CD with Ansible on Localhost
+name: Deploy Flask App using Ansible
 
 on:
   push:
@@ -7,11 +7,10 @@ on:
 
 jobs:
   deploy:
-    name: Deploy App to Localhost
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Install Ansible
@@ -20,6 +19,5 @@ jobs:
           sudo apt install -y ansible python3-pip
 
       - name: Run Ansible Playbook
-        run: |
-          ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
+        run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
 

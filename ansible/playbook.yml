@@ -9,7 +9,7 @@
         state: present
         update_cache: yes
 
-    - name: Install Flask safely (ignore system packages)
+    - name: Install Flask safely
       pip:
         name: flask
         state: latest
