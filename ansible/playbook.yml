@@ -18,12 +18,12 @@
 
     - name: Stop running app (if exists)
       shell: |
-        pkill -f "python3 /home/runner/work/ansible-github-localhost/app/app.py" || true
+        pkill -f "python3 /home/runner/work/ansible/ansible/app/app.py" || true
       ignore_errors: yes
 
     - name: Run Flask app on port 8004
       shell: |
-        nohup python3 /home/runner/work/ansible-github-localhost/app/app.py &
+        nohup python3 /home/runner/work/ansible/ansible/app/app.py &
       args:
-        chdir: /home/runner/work/ansible-github-localhost/app/
+        chdir: /home/runner/work/ansible/ansible/app/
 
