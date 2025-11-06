@@ -1,4 +1,4 @@
-name: Deploy Flask App using Ansible
+name: Run Flask App with Ansible + Public Access
 
 on:
   push:
@@ -10,14 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Ansible
+      - name: Install Dependencies (Ansible + Python)
         run: |
           sudo apt update
-          sudo apt install -y ansible python3-pip
+          sudo apt install -y ansible python3-pip unzip wget
 
       - name: Run Ansible Playbook
         run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
+
+      - name: Install ngrok
+        run: |
+          wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+          unzip ngrok-stable-linux-amd64.zip
+
+      - name: Start ngrok Tunnel for Flask App
+        run: |
+          nohup ./ngrok http 8000 > /dev/null &
+          sleep 5
+          curl --silent http://127.0.0.1:4040/api/tunnels > tunnels.json
+          echo "🔗 Public Flask URL:"
+          cat tunnels.json | grep -o 'https://[0-9a-z]*\.ngrok\.io'
 

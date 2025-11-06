@@ -1,29 +1,27 @@
 ---
-- name: Deploy app on localhost
+- name: Deploy Flask app on localhost
   hosts: local
   become: yes
   tasks:
-    - name: Ensure Python3 and pip are installed
+    - name: Ensure Python and pip installed
       apt:
         name: [python3, python3-pip]
         state: present
         update_cache: yes
 
-    - name: Install Flask safely
+    - name: Install Flask
       pip:
         name: flask
-        state: latest
         executable: pip3
         extra_args: --ignore-installed --break-system-packages
 
     - name: Stop running app (if exists)
-      shell: |
-        pkill -f "python3 /home/runner/work/ansible/ansible/app/app.py" || true
+      shell: pkill -f "python3 app/app.py" || true
       ignore_errors: yes
 
-    - name: Run Flask app on port 8004
+    - name: Run Flask app on port 8000
       shell: |
-        nohup python3 /home/runner/work/ansible/ansible/app/app.py &
+        nohup python3 app/app.py &
       args:
-        chdir: /home/runner/work/ansible/ansible/app/
+        chdir: "{{ lookup('env','GITHUB_WORKSPACE') }}"
 
