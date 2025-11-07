@@ -55,7 +55,7 @@ jobs:
               break
             fi
             echo "⏳ Waiting for ngrok to come up ($i/25)..."
-            sleep 1
+            sleep 3600
           done
 
           echo "🔗 Fetching ngrok public URL..."
