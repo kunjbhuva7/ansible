@@ -1,4 +1,4 @@
-name: Flask CI/CD with Ansible + ngrok (Final Working Version)
+name: Flask CI/CD with Ansible + ngrok (Final Fixed Version)
 
 on:
   push:
@@ -10,17 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Install Ansible, Python, tools
       - name: Install Ansible and Dependencies
         run: |
           sudo apt update
-          sudo apt install -y ansible python3-pip unzip wget net-tools
+          sudo apt install -y ansible python3-pip unzip wget net-tools curl
 
+      # 3️⃣ Run Ansible Playbook (deploy Flask)
       - name: Run Ansible Playbook
         run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
 
+      # 4️⃣ Install + Authenticate ngrok
       - name: Install and Authenticate ngrok
         env:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
@@ -29,29 +33,35 @@ jobs:
           wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
           unzip -qq ngrok-stable-linux-amd64.zip
           ./ngrok config add-authtoken "$NGROK_AUTH_TOKEN"
-          mkdir -p ~/.ngrok2
-          echo "authtoken: $NGROK_AUTH_TOKEN" > ~/.ngrok2/ngrok.yml
 
+      # 5️⃣ Start Flask manually to make sure port is live
       - name: Start Flask app (background)
         run: |
-          echo "🚀 Starting Flask manually on port 8000"
+          echo "🚀 Starting Flask on port 8000..."
           nohup python3 app/app.py > flask.log 2>&1 &
           sleep 5
           echo "✅ Checking Flask port..."
           netstat -tlnp | grep 8000 || echo "⚠️ Flask port not open!"
 
+      # 6️⃣ Launch ngrok tunnel and print the public URL
       - name: Start ngrok tunnel
         run: |
           echo "🚀 Launching ngrok tunnel on port 8000..."
           nohup ./ngrok http 8000 --log=stdout > ngrok.log 2>&1 &
-          # wait up to 20 seconds for ngrok API
-          for i in {1..20}; do
+
+          # wait until ngrok API appears
+          for i in {1..25}; do
             if curl -fs http://127.0.0.1:4040/api/tunnels > tunnels.json 2>/dev/null; then
               break
             fi
-            echo "⏳ Waiting for ngrok to come up ($i/20)..."
+            echo "⏳ Waiting for ngrok to come up ($i/25)..."
             sleep 1
           done
+
           echo "🔗 Fetching ngrok public URL..."
-          cat tunnels.json | grep -o 'https://[0-9a-z]*\.ngrok\.io' || (echo "❌ ngrok failed to start:" && cat ngrok.log && exit 1)
+          cat tunnels.json | grep -o 'https://[0-9a-z-]*\.ngrok[-a-z]*\.app' || \
+          cat tunnels.json | grep -o 'https://[0-9a-z-]*\.ngrok\.io' || \
+          (echo "❌ ngrok failed to start:" && cat ngrok.log && exit 1)
+
+          echo "✅ Deployment finished successfully!"
 
