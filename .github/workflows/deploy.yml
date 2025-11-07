@@ -1,9 +1,8 @@
-name: Run Flask App with Ansible + Public Access
+name: CI/CD Flask App with Ansible + ngrok
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -25,6 +24,7 @@ jobs:
         run: |
           wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
           unzip ngrok-stable-linux-amd64.zip
+          ./ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
 
       - name: Start ngrok Tunnel for Flask App
         run: |
