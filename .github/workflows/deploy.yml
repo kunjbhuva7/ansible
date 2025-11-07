@@ -72,7 +72,7 @@ jobs:
           echo "To keep it alive longer, edit sleep time below 👇"
 
           # Keep workflow running for 1 hour (3600 seconds)
-          for t in {1..60}; do
+          for t in {1..10}; do
             echo "🕐 Live for: $t minute(s)..."
             sleep 60
           done
