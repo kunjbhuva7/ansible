@@ -1,4 +1,4 @@
-name: Flask CI/CD with Ansible + ngrok (Final Fixed Version)
+name: Flask CI/CD with Ansible + ngrok (1 Hour Live Version)
 
 on:
   push:
@@ -10,21 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout your repository code
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Install Ansible, Python, tools
+      # 2️⃣ Install Ansible, Python, and required tools
       - name: Install Ansible and Dependencies
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip unzip wget net-tools curl
 
-      # 3️⃣ Run Ansible Playbook (deploy Flask)
+      # 3️⃣ Run Ansible Playbook (to install Flask and deploy app)
       - name: Run Ansible Playbook
         run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
 
-      # 4️⃣ Install + Authenticate ngrok
+      # 4️⃣ Install ngrok and authenticate using your token
       - name: Install and Authenticate ngrok
         env:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
           unzip -qq ngrok-stable-linux-amd64.zip
           ./ngrok config add-authtoken "$NGROK_AUTH_TOKEN"
 
-      # 5️⃣ Start Flask manually to make sure port is live
+      # 5️⃣ Start Flask manually to make sure it’s running before ngrok starts
       - name: Start Flask app (background)
         run: |
           echo "🚀 Starting Flask on port 8000..."
@@ -43,19 +43,19 @@ jobs:
           echo "✅ Checking Flask port..."
           netstat -tlnp | grep 8000 || echo "⚠️ Flask port not open!"
 
-      # 6️⃣ Launch ngrok tunnel and print the public URL
+      # 6️⃣ Launch ngrok tunnel and keep it alive for 1 hour
       - name: Start ngrok tunnel
         run: |
           echo "🚀 Launching ngrok tunnel on port 8000..."
           nohup ./ngrok http 8000 --log=stdout > ngrok.log 2>&1 &
 
-          # wait until ngrok API appears
-          for i in {1..25}; do
+          # Wait up to 20 seconds for ngrok API to respond
+          for i in {1..20}; do
             if curl -fs http://127.0.0.1:4040/api/tunnels > tunnels.json 2>/dev/null; then
               break
             fi
-            echo "⏳ Waiting for ngrok to come up ($i/25)..."
-            sleep 3600
+            echo "⏳ Waiting for ngrok to come up ($i/20)..."
+            sleep 1
           done
 
           echo "🔗 Fetching ngrok public URL..."
@@ -63,5 +63,17 @@ jobs:
           cat tunnels.json | grep -o 'https://[0-9a-z-]*\.ngrok\.io' || \
           (echo "❌ ngrok failed to start:" && cat ngrok.log && exit 1)
 
-          echo "✅ Deployment finished successfully!"
+          echo ""
+          echo "✅ Deployment successful!"
+          echo "🌍 Flask App is LIVE for 1 hour!"
+          echo ""
+          echo "To keep it alive longer, edit sleep time below 👇"
+
+          # Keep workflow running for 1 hour (3600 seconds)
+          for t in {1..60}; do
+            echo "🕐 Live for: $t minute(s)..."
+            sleep 60
+          done
+
+          echo "⌛ Workflow completed after 1 hour. Tunnel closed."
 
